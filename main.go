@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -22,13 +24,17 @@ type Config struct {
 
 var client *lazyClient = (*lazyClient)(nil)
 
-func main() {
-	if len(os.Args) != 2 {
-		fmt.Println("Usage: go run main.go <path-to-yaml-file>")
-		os.Exit(1)
-	}
+var (
+	port     int
+	filePath string
+	address  string
+)
 
-	filePath := os.Args[1]
+func main() {
+	flag.IntVar(&port, "p", 5000, "port to listen on")
+	flag.StringVar(&address, "a", "0.0.0.0", "address to listen on")
+	flag.StringVar(&filePath, "c", "config.yaml", "configuration yaml file")
+	flag.Parse()
 
 	config, err := readConfig(filePath)
 	if err != nil {
@@ -51,7 +57,11 @@ func main() {
 	http.Handle("/", r)
 
 	fmt.Println("Server is running on http://0.0.0.0:5000")
-	http.ListenAndServe("0.0.0.0:5000", nil)
+	err = http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
+
+	if err != nil {
+		log.Fatalf("Error starting server: %v", err)
+	}
 }
 
 func getPort(ctx context.Context, macAddress string, portIdx string) (deviceId string, port unifi.DevicePortOverrides, err error) {
@@ -120,6 +130,7 @@ func PowerOnHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := setPortPower(r.Context(), macAddress, portIdx, true)
 	if err != nil {
+		log.Fatalf("Error setting power on for MAC Address %s, Port Index %s: %v", macAddress, portIdx, err)
 		fmt.Fprintf(w, "Error setting power on for MAC Address %s, Port Index %s: %v", macAddress, portIdx, err)
 		return
 	}
@@ -132,6 +143,7 @@ func PowerOffHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := setPortPower(r.Context(), macAddress, portIdx, false)
 	if err != nil {
+		log.Fatalf("Error setting power on for MAC Address %s, Port Index %s: %v", macAddress, portIdx, err)
 		fmt.Fprintf(w, "Error setting power on for MAC Address %s, Port Index %s: %v", macAddress, portIdx, err)
 		return
 	}
@@ -163,6 +175,12 @@ func QueryHandler(w http.ResponseWriter, r *http.Request) {
 
 func readConfig(filePath string) (Config, error) {
 	var config Config
+
+	log.Printf("Reading config file %s", filePath)
+
+	if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
+		return config, fmt.Errorf("File %s does not exist: %v", filePath, err)
+	}
 
 	fileContent, err := os.ReadFile(filePath)
 	if err != nil {

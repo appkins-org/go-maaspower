@@ -47,7 +47,10 @@ func setHTTPClient(c *unifi.Client, insecure bool, subsystem string) {
 	jar, _ := cookiejar.New(nil)
 	httpClient.Jar = jar
 
-	c.SetHTTPClient(httpClient)
+	err := c.SetHTTPClient(httpClient)
+	if err != nil {
+		panic(fmt.Sprintf("failed to set http client: %s", err))
+	}
 }
 
 var initErr error
