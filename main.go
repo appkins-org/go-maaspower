@@ -73,8 +73,6 @@ func getPort(ctx context.Context, macAddress string, portIdx string) (deviceId s
 		return
 	}
 
-	i := p - 1
-
 	dev, err := client.GetDeviceByMAC(ctx, "default", macAddress)
 	if err != nil {
 		err = fmt.Errorf("Error getting device by MAC Address %s: %v", macAddress, err)
@@ -83,38 +81,46 @@ func getPort(ctx context.Context, macAddress string, portIdx string) (deviceId s
 
 	deviceId = dev.ID
 
-	if dev.PortOverrides[i].PortIDX != p {
-		err = fmt.Errorf("Error getting port index %s for MAC Address %s", portIdx, macAddress)
-		return
+	for _, pd := range dev.PortOverrides {
+		if pd.PortIDX == p {
+			port = pd
+			break
+		}
 	}
-
-	port = dev.PortOverrides[i]
 
 	return
 }
 
 func setPortPower(ctx context.Context, macAddress string, portIdx string, power bool) error {
-	devId, port, err := getPort(ctx, macAddress, portIdx)
+	p, err := strconv.Atoi(portIdx)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error getting integer value from port %s: %v", portIdx, err)
 	}
 
-	if power {
-		if port.PoeMode == "auto" {
-			return nil
-		}
-		port.PoeMode = "auto"
-	} else {
-		if port.PoeMode == "off" {
-			return nil
-		}
-		port.PoeMode = "off"
+	dev, err := client.GetDeviceByMAC(ctx, "default", macAddress)
+	if err != nil {
+		return fmt.Errorf("Error getting device by MAC Address %s: %v", macAddress, err)
 	}
 
-	_, err = client.UpdateDevice(ctx, "default", &unifi.Device{
-		ID:            devId,
-		PortOverrides: []unifi.DevicePortOverrides{port},
-	})
+	for i, pd := range dev.PortOverrides {
+		if pd.PortIDX == p {
+			if power {
+				if pd.PoeMode == "auto" {
+					return nil
+				}
+				dev.PortOverrides[i].PoeMode = "auto"
+				break
+			} else {
+				if pd.PoeMode == "off" {
+					return nil
+				}
+				dev.PortOverrides[i].PoeMode = "off"
+				break
+			}
+		}
+	}
+
+	_, err = client.UpdateDevice(ctx, "default", dev)
 
 	if err != nil {
 		return fmt.Errorf("Error updating device: %v", err)
