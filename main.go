@@ -50,8 +50,8 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/maaspower/{mac_address}/{port_idx}/on", PowerOnHandler).Methods("GET")
-	r.HandleFunc("/maaspower/{mac_address}/{port_idx}/off", PowerOffHandler).Methods("GET")
+	r.HandleFunc("/maaspower/{mac_address}/{port_idx}/on", PowerOnHandler).Methods("POST")
+	r.HandleFunc("/maaspower/{mac_address}/{port_idx}/off", PowerOffHandler).Methods("POST")
 	r.HandleFunc("/maaspower/{mac_address}/{port_idx}/query", QueryHandler).Methods("GET")
 
 	http.Handle("/", r)
@@ -169,7 +169,7 @@ func QueryHandler(w http.ResponseWriter, r *http.Request) {
 	mode := port.PoeMode
 
 	if mode == "auto" {
-		fmt.Fprintf(w, "status : on")
+		fmt.Fprintf(w, "status : running")
 		return
 	} else if mode == "off" {
 		fmt.Fprint(w, "status : stopped")
