@@ -1,6 +1,6 @@
 module github.com/appkins-org/go-maaspower/build
 
-go 1.21
+go 1.23.0
 
 require (
 	github.com/client9/misspell v0.3.4
@@ -13,7 +13,7 @@ require (
 	4d63.com/gochecknoglobals v0.2.1 // indirect
 	cloud.google.com/go v0.110.9 // indirect
 	cloud.google.com/go/compute v1.23.2 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	cloud.google.com/go/iam v1.1.4 // indirect
 	cloud.google.com/go/kms v1.15.4 // indirect
 	cloud.google.com/go/storage v1.33.0 // indirect
@@ -365,7 +365,7 @@ require (
 	golang.org/x/exp/typeparams v0.0.0-20230307190834-24139beb5833 // indirect
 	golang.org/x/mod v0.13.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/oauth2 v0.13.0 // indirect
+	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/term v0.13.0 // indirect
